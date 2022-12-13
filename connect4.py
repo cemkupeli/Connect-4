@@ -83,8 +83,8 @@ class Connect4(Game):
             return succ
 
         def _board_filled(self):
-            for i in self._board.ncols:
-                for j in self._board.nrows:
+            for i in range(self._board.ncols):
+                for j in range(self._board.nrows):
                     if self._board.cols[i][j] == 0:
                         return False
             return True
@@ -198,3 +198,14 @@ if __name__ == '__main__':
     print(pos)
     pos = pos.successor(1)
     print(pos)
+    pos = pos.successor(1)
+    print(pos)
+    pos = pos.successor(2)
+    pos = pos.successor(1)
+    pos = pos.successor(3)
+    pos = pos.successor(1)
+    pos = pos.successor(4)
+    pos = pos.successor(1)
+    print(pos)
+    print(pos.is_terminal())
+   
