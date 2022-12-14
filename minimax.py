@@ -15,7 +15,12 @@ def minimax(pos, depth, h):
         depth -- a nonnegative integer
         h -- a heuristic function that can be applied to pos and all its successors
     '''
+    # print("Minimax called with depth", depth, "on following position:")
+    # print(pos)
+    # print("Position is terminal:", pos.is_terminal())
+    # print("Current actor is:", pos.actor())
     if pos.is_terminal() or depth == 0:
+        # print("Position is terminal or depth is 0, returning heuristic value")
         return (pos.heuristic(), None)
     else:
         if pos.actor() == 0:
@@ -23,8 +28,16 @@ def minimax(pos, depth, h):
             best_value = -math.inf
             best_move = None
             moves = pos.get_actions()
+            # if moves:
+            #     print("Available moves:", moves)
+            # else:
+            #     print("No moves available")
             for move in moves:
+                # print("Evaluating move", move, "for the following position:")
+                # print(pos)
                 child = pos.successor(move)
+                # print("Successor is the following position:")
+                # print(child)
                 mm, _ = minimax(child, depth - 1, h)
                 if mm > best_value:
                     best_value = mm
@@ -35,8 +48,16 @@ def minimax(pos, depth, h):
             best_value = math.inf
             best_move = None
             moves = pos.get_actions()
+            # if moves:
+            #     print("Available moves:", moves)
+            # else:
+            #     print("No moves available")
             for move in moves:
+                # print("Evaluating move", move, "for the following position:")
+                # print(pos)
                 child = pos.successor(move)
+                # print("Successor is the following position:")
+                # print(child)
                 mm, _ = minimax(child, depth - 1, h)
                 if mm < best_value:
                     best_value = mm

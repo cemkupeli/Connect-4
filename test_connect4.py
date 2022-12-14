@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
     num_games = 10000
     p0_wins = 0
-    p0_policy = alpha_beta_policy(9, None)
+    p0_policy = minimax_policy(1, None)
     p1_wins = 0
     p1_policy = random_policy()
 

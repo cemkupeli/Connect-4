@@ -1,6 +1,7 @@
 # SOURCE: Adapted from starter code for CPSC 474 Fall 2022 Project 4
 
 from game import Game, State
+import copy
 
 class Connect4(Game):
     def __init__(self, r=6, c=7):
@@ -11,31 +12,32 @@ class Connect4(Game):
         '''
         self.nrows = r
         self.ncols = c
-        self.cols = [[0 for _ in range(self.nrows)] for _ in range(self.ncols)]
-        self.turn = 0
             
     def initial_state(self):
         ''' Creates the initial state for the board.
         '''
-        return Connect4.State(self, 0)
+        cols = [[0 for _ in range(self.nrows)] for _ in range(self.ncols)]
+        return Connect4.State(self, cols, 0)
 
     
     class State(State):
-        def __init__(self, board, turn):
+        def __init__(self, board, cols, turn): # TODO: add cols to initializer
             if board is None:
                 raise ValueError('board cannot be None')
             if turn != 0 and turn != 1:
                 raise ValueError('invalid turn %d' % turn)
-            
+
             self._board = board
-            self._turn = turn            
+            self._cols = cols
+            self._turn = turn
+                 
             # self._compute_hash()
 
             
         def is_initial(self):
             ''' Determines if this state is the initial state.
             '''
-            return (self._board.cols[i][0] == 0 for i in self._board.ncols)
+            return (self._cols[i][0] == 0 for i in self._board.ncols)
 
             
         def actor(self):
@@ -52,7 +54,7 @@ class Connect4(Game):
             if c < 0 or c >= self._board.ncols:
                 raise ValueError('Illegal column %d' % c)
 
-            return self._board.cols[c][-1] == 0
+            return self._cols[c][-1] == 0
 
         
         def get_actions(self):
@@ -67,16 +69,15 @@ class Connect4(Game):
                 c -- the column that the disc will be placed in
             '''
             if not self.is_legal(c):
-                print(self)
                 raise ValueError('Illegal move: %d' % c)
 
-            succ = Connect4.State(self._board, 1 - self._turn)
+            succ = Connect4.State(self._board, [row[:] for row in self._cols], 1 - self._turn)
 
             # Place the disk in the given column
             for i in range(succ._board.nrows):
-                if succ._board.cols[c][i] == 0:
+                if succ._cols[c][i] == 0:
                     # player 0's discs are encoded as 1, player 1's discs are encoded as 2 (empty is encoded as 0)
-                    succ._board.cols[c][i] = self._turn + 1
+                    succ._cols[c][i] = self._turn + 1
                     break
 
             # succ._compute_hash()
@@ -85,9 +86,8 @@ class Connect4(Game):
 
         def _board_filled(self):
             for i in range(self._board.ncols):
-                for j in range(self._board.nrows):
-                    if self._board.cols[i][j] == 0:
-                        return False
+                if self._cols[i][-1] == 0:
+                    return False
             return True
 
         # TODO: Remember previous move for quicker check?
@@ -105,11 +105,11 @@ class Connect4(Game):
                     if i <= self._board.ncols - 4:
                         # Check upper diagonal if valid
                         if j <= self._board.nrows - 4:
-                            color = self._board.cols[i][j]
+                            color = self._cols[i][j]
                             if color != 0:
                                 line = True
                                 for a in range(3):
-                                    if self._board.cols[i + a + 1][j + a + 1] != color:
+                                    if self._cols[i + a + 1][j + a + 1] != color:
                                         line = False
                                         break
                                 if line:
@@ -117,22 +117,22 @@ class Connect4(Game):
                         
                         # Check lower diagonal if valid
                         if j >= 3:
-                            color = self._board.cols[i][j]
+                            color = self._cols[i][j]
                             if color != 0:
                                 line = True
                                 for a in range(3):
-                                    if self._board.cols[i + a + 1][j - a - 1] != color:
+                                    if self._cols[i + a + 1][j - a - 1] != color:
                                         line = False
                                         break
                                 if line:
                                     return True, color
 
                         # Check horizontal
-                        color = self._board.cols[i][j]
+                        color = self._cols[i][j]
                         if color != 0:
                             line = True
                             for a in range(3):
-                                if self._board.cols[i + a + 1][j] != color:
+                                if self._cols[i + a + 1][j] != color:
                                     line = False
                                     break
                             if line:
@@ -140,11 +140,11 @@ class Connect4(Game):
                 
                     # Check vertical if valid
                     if j <= self._board.nrows - 4:
-                        color = self._board.cols[i][j]
+                        color = self._cols[i][j]
                         if color != 0:
                             line = True
                             for a in range(3):
-                                if self._board.cols[i][j + a + 1] != color:
+                                if self._cols[i][j + a + 1] != color:
                                     line = False
                                     break
                             if line:
@@ -170,6 +170,14 @@ class Connect4(Game):
                 return None
 
         def heuristic(self):
+            if self.is_terminal():
+                result = self.payoff()
+                if result == 1:
+                    return 100000
+                elif result == 0:
+                    return 0
+                else:
+                    return -100000
             value = 0
             # Check for potential four-line tokens
             for i in range(self._board.ncols):
@@ -178,13 +186,13 @@ class Connect4(Game):
                     if i <= self._board.ncols - 4:
                         # Check upper diagonal if valid
                         if j <= self._board.nrows - 4:
-                            color = self._board.cols[i][j]
+                            color = self._cols[i][j]
                             if color != 0:
                                 seq_len = 1
                                 for a in range(3):
-                                    if self._board.cols[i + a + 1][j + a + 1] == color:
+                                    if self._cols[i + a + 1][j + a + 1] == color:
                                         seq_len += 1
-                                    elif self._board.cols[i + a + 1][j + a + 1] > 0:
+                                    elif self._cols[i + a + 1][j + a + 1] > 0:
                                         seq_len = 0
                                         break
                                 if seq_len > 1:
@@ -193,13 +201,13 @@ class Connect4(Game):
                         
                         # Check lower diagonal if valid
                         if j >= 3:
-                            color = self._board.cols[i][j]
+                            color = self._cols[i][j]
                             if color != 0:
                                 seq_len = 1
                                 for a in range(3):
-                                    if self._board.cols[i + a + 1][j - a - 1] == color:
+                                    if self._cols[i + a + 1][j - a - 1] == color:
                                         seq_len += 1
-                                    elif self._board.cols[i + a + 1][j - a - 1] > 0:
+                                    elif self._cols[i + a + 1][j - a - 1] > 0:
                                         seq_len = 0
                                         break
                                 if seq_len > 1:
@@ -207,13 +215,13 @@ class Connect4(Game):
                                     value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
 
                         # Check horizontal
-                        color = self._board.cols[i][j]
+                        color = self._cols[i][j]
                         if color != 0:
                             seq_len = 1
                             for a in range(3):
-                                if self._board.cols[i + a + 1][j] == color:
+                                if self._cols[i + a + 1][j] == color:
                                     seq_len += 1
-                                elif self._board.cols[i + a + 1][j] > 0:
+                                elif self._cols[i + a + 1][j] > 0:
                                     seq_len = 0
                                     break
                             if seq_len > 1:
@@ -222,13 +230,13 @@ class Connect4(Game):
                 
                     # Check vertical if valid
                     if j <= self._board.nrows - 4:
-                        color = self._board.cols[i][j]
+                        color = self._cols[i][j]
                         if color != 0:
                             seq_len = 1
                             for a in range(3):
-                                if self._board.cols[i][j + a + 1] == color:
+                                if self._cols[i][j + a + 1] == color:
                                     seq_len += 1
-                                elif self._board.cols[i][j + a + 1] > 0:
+                                elif self._cols[i][j + a + 1] > 0:
                                     seq_len = 0
                                     break
                             if seq_len > 1:
@@ -240,7 +248,7 @@ class Connect4(Game):
             board_str = ""
             for i in range(self._board.nrows):
                 for j in range(self._board.ncols):
-                    board_str += str(self._board.cols[j][self._board.nrows - 1 - i]) + " "
+                    board_str += str(self._cols[j][self._board.nrows - 1 - i]) + " "
                 board_str += "\n"
             return board_str
 
@@ -251,7 +259,7 @@ class Connect4(Game):
         
         # def _compute_hash(self):
         #     # faster hash computation; thanks to CF
-        #     self.hash = hash(tuple(self._board.cols)) * 2 + self._turn
+        #     self.hash = hash(tuple(self._cols)) * 2 + self._turn
 
             
         def __hash__(self):
@@ -259,7 +267,7 @@ class Connect4(Game):
 
         
         def __eq__(self, other):
-            return isinstance(other, self.__class__) and self._seeds == other._seeds and self._turn == other._turn and self._board is other._board
+            return isinstance(other, self.__class__) and self._turn == other._turn and self._board is other._board
 
 
 if __name__ == '__main__':
