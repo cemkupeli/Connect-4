@@ -52,7 +52,7 @@ class Connect4(Game):
             if c < 0 or c >= self._board.ncols:
                 raise ValueError('Illegal column %d' % c)
 
-            return self._board.cols[c][self._board.nrows - 1] == 0
+            return self._board.cols[c][-1] == 0
 
         
         def get_actions(self):
@@ -67,6 +67,7 @@ class Connect4(Game):
                 c -- the column that the disc will be placed in
             '''
             if not self.is_legal(c):
+                print(self)
                 raise ValueError('Illegal move: %d' % c)
 
             succ = Connect4.State(self._board, 1 - self._turn)
@@ -167,6 +168,73 @@ class Connect4(Game):
                 return (winner == 1) - (winner == 2)
             else:
                 return None
+
+        def heuristic(self):
+            value = 0
+            # Check for potential four-line tokens
+            for i in range(self._board.ncols):
+                for j in range(self._board.nrows):
+                    # Check if there is enough horizontal space 
+                    if i <= self._board.ncols - 4:
+                        # Check upper diagonal if valid
+                        if j <= self._board.nrows - 4:
+                            color = self._board.cols[i][j]
+                            if color != 0:
+                                seq_len = 1
+                                for a in range(3):
+                                    if self._board.cols[i + a + 1][j + a + 1] == color:
+                                        seq_len += 1
+                                    elif self._board.cols[i + a + 1][j + a + 1] > 0:
+                                        seq_len = 0
+                                        break
+                                if seq_len > 1:
+                                    # positive reward for player 0, negative for player 1
+                                    value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
+                        
+                        # Check lower diagonal if valid
+                        if j >= 3:
+                            color = self._board.cols[i][j]
+                            if color != 0:
+                                seq_len = 1
+                                for a in range(3):
+                                    if self._board.cols[i + a + 1][j - a - 1] == color:
+                                        seq_len += 1
+                                    elif self._board.cols[i + a + 1][j - a - 1] > 0:
+                                        seq_len = 0
+                                        break
+                                if seq_len > 1:
+                                    # positive reward for player 0, negative for player 1
+                                    value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
+
+                        # Check horizontal
+                        color = self._board.cols[i][j]
+                        if color != 0:
+                            seq_len = 1
+                            for a in range(3):
+                                if self._board.cols[i + a + 1][j] == color:
+                                    seq_len += 1
+                                elif self._board.cols[i + a + 1][j] > 0:
+                                    seq_len = 0
+                                    break
+                            if seq_len > 1:
+                                # positive reward for player 0, negative for player 1
+                                value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
+                
+                    # Check vertical if valid
+                    if j <= self._board.nrows - 4:
+                        color = self._board.cols[i][j]
+                        if color != 0:
+                            seq_len = 1
+                            for a in range(3):
+                                if self._board.cols[i][j + a + 1] == color:
+                                    seq_len += 1
+                                elif self._board.cols[i][j + a + 1] > 0:
+                                    seq_len = 0
+                                    break
+                            if seq_len > 1:
+                                # positive reward for player 0, negative for player 1
+                                value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
+            return value
             
         def __str__(self):
             board_str = ""
@@ -207,7 +275,6 @@ if __name__ == '__main__':
     pos = pos.successor(2)
     pos = pos.successor(1)
     pos = pos.successor(3)
-    pos = pos.successor(1)
-    pos = pos.successor(4)
     print(pos)
     print(pos.is_terminal())
+    print(pos.heuristic())

@@ -2,11 +2,10 @@ from datetime import datetime
 import random
 import math
 
-def alpha_beta_policy(h):
+def alpha_beta_policy(depth, h):
     def fxn(pos):
         #move = MCTS(pos, time_limit) # if MCTS was class
         #res =  move.till_end_time() # if run was function in class
-        depth = 5
         # h is heuristic class
         val, move = alpha_beta(pos, depth, -math.inf, math.inf, h)
         return move
@@ -14,7 +13,7 @@ def alpha_beta_policy(h):
 
 def alpha_beta(pos, depth, alpha, beta, h):
     if pos.is_terminal() or depth == 0:
-        return (h.evaluate(pos), None)
+        return (pos.heuristic(), None)
     else:
         if pos.actor() == 0:
             # max player

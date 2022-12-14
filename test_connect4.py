@@ -1,13 +1,18 @@
 from connect4 import Connect4
 from random_policy import random_policy
+from minimax import minimax_policy
+from alpha_beta import alpha_beta_policy
+import time
 
 if __name__ == '__main__':
 
-    num_games = 100000
+    num_games = 10000
     p0_wins = 0
-    p0_policy = random_policy()
+    p0_policy = alpha_beta_policy(9, None)
     p1_wins = 0
     p1_policy = random_policy()
+
+    start_time = time.time()
 
     for _ in range(num_games):
         board = Connect4()
@@ -26,4 +31,7 @@ if __name__ == '__main__':
         elif pos.payoff() == -1:
             p1_wins += 1
     
+    end_time = time.time()
+
     print(p0_wins / (p0_wins + p1_wins))
+    print("Runtime:", round(end_time - start_time, 5), "seconds")
