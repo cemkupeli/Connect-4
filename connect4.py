@@ -105,45 +105,49 @@ class Connect4(Game):
                         # Check upper diagonal if valid
                         if j <= self._board.nrows - 4:
                             color = self._board.cols[i][j]
-                            line = True
-                            for a in range(3):
-                                if self._board.cols[i + a + 1][j + a + 1] != color:
-                                    line = False
-                                    break
-                            if line:
-                                return True, color
+                            if color != 0:
+                                line = True
+                                for a in range(3):
+                                    if self._board.cols[i + a + 1][j + a + 1] != color:
+                                        line = False
+                                        break
+                                if line:
+                                    return True, color
                         
                         # Check lower diagonal if valid
                         if j >= 3:
                             color = self._board.cols[i][j]
+                            if color != 0:
+                                line = True
+                                for a in range(3):
+                                    if self._board.cols[i + a + 1][j - a - 1] != color:
+                                        line = False
+                                        break
+                                if line:
+                                    return True, color
+
+                        # Check horizontal
+                        color = self._board.cols[i][j]
+                        if color != 0:
                             line = True
                             for a in range(3):
-                                if self._board.cols[i + a + 1][j - a - 1] != color:
+                                if self._board.cols[i + a + 1][j] != color:
                                     line = False
                                     break
                             if line:
                                 return True, color
-
-                        # Check horizontal
-                        color = self._board.cols[i][j]
-                        line = True
-                        for a in range(3):
-                            if self._board.cols[i + a + 1][j] != color:
-                                line = False
-                                break
-                        if line:
-                            return True, color
                 
                     # Check vertical if valid
                     if j <= self._board.nrows - 4:
                         color = self._board.cols[i][j]
-                        line = True
-                        for a in range(3):
-                            if self._board.cols[i][j + a + 1] != color:
-                                line = False
-                                break
-                        if line:
-                            return True, color
+                        if color != 0:
+                            line = True
+                            for a in range(3):
+                                if self._board.cols[i][j + a + 1] != color:
+                                    line = False
+                                    break
+                            if line:
+                                return True, color
 
             return False, 0
         
@@ -205,7 +209,5 @@ if __name__ == '__main__':
     pos = pos.successor(3)
     pos = pos.successor(1)
     pos = pos.successor(4)
-    pos = pos.successor(1)
     print(pos)
     print(pos.is_terminal())
-   

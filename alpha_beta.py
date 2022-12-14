@@ -2,15 +2,15 @@ from datetime import datetime
 import random
 import math
 
-def mcts_policy(time_limit, h):
+def alpha_beta_policy(h):
     def fxn(pos):
         #move = MCTS(pos, time_limit) # if MCTS was class
         #res =  move.till_end_time() # if run was function in class
-        val, move = alpha_beta(pos, 5, -math.inf, math.inf, h)
+        depth = 5
+        # h is heuristic class
+        val, move = alpha_beta(pos, depth, -math.inf, math.inf, h)
         return move
     return fxn
-
-
 
 def alpha_beta(pos, depth, alpha, beta, h):
     if pos.is_terminal() or depth == 0:
@@ -18,7 +18,7 @@ def alpha_beta(pos, depth, alpha, beta, h):
     else:
         if pos.actor() == 0:
             # max player
-            best_value = -h.inf
+            best_value = -math.inf
             best_move = None
             moves = pos.get_actions()
             for move in moves:
@@ -33,7 +33,7 @@ def alpha_beta(pos, depth, alpha, beta, h):
             return (best_value, best_move)
         else:
             # min player
-            best_value = h.inf
+            best_value = math.inf
             best_move = None
             moves = pos.get_actions()
             for move in moves:
