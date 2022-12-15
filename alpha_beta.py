@@ -4,19 +4,25 @@ from datetime import datetime
 import random
 import math
 
-def alpha_beta_policy(depth, h):
+def alpha_beta_policy(depth, randomness):
     def fxn(pos):
-        #move = MCTS(pos, time_limit) # if MCTS was class
-        #res =  move.till_end_time() # if run was function in class
-        # h is heuristic class
-        val, move = alpha_beta(pos, depth, -math.inf, math.inf, h)
+        if randomness > 1:
+            raise ValueError('randomness can not be more than 1')
+        num = random.random()
+        if num < randomness:
+            moves = pos.get_actions()
+            move = random.choice(moves)
+            return move
+        val, move = alpha_beta(pos, depth, -math.inf, math.inf)
         return move
     return fxn
 
-def alpha_beta(pos, depth, alpha, beta, h):
+def alpha_beta(pos, depth, alpha, beta):
     if pos.is_terminal() or depth == 0:
         return (pos.heuristic(), None)
     else:
+        
+
         if pos.actor() == 0:
             # max player
             best_value = -math.inf
@@ -24,7 +30,7 @@ def alpha_beta(pos, depth, alpha, beta, h):
             moves = pos.get_actions()
             for move in moves:
                 child = pos.successor(move)
-                mm, _ = alpha_beta(child, depth - 1, alpha, beta, h)
+                mm, _ = alpha_beta(child, depth - 1, alpha, beta)
                 if mm > best_value:
                     best_value = mm
                     best_move = move
@@ -39,7 +45,7 @@ def alpha_beta(pos, depth, alpha, beta, h):
             moves = pos.get_actions()
             for move in moves:
                 child = pos.successor(move)
-                mm, _ = alpha_beta(child, depth - 1, alpha, beta, h)
+                mm, _ = alpha_beta(child, depth - 1, alpha, beta)
                 if mm < best_value:
                     best_value = mm
                     best_move = move
