@@ -16,7 +16,7 @@ class Connect4(Game):
     def initial_state(self):
         ''' Creates the initial state for the board.
         '''
-        cols = [[0 for _ in range(self.nrows)] for _ in range(self.ncols)]
+        cols = [0 for _ in range(self.nrows * self.ncols)]
         return Connect4.State(self, cols, 0)
 
     
@@ -37,7 +37,7 @@ class Connect4(Game):
         def is_initial(self):
             ''' Determines if this state is the initial state.
             '''
-            return (self._cols[i][0] == 0 for i in self._board.ncols)
+            return (self._cols[i * self._board.nrows] == 0 for i in range(self._board.ncols))
 
             
         def actor(self):
@@ -54,7 +54,7 @@ class Connect4(Game):
             if c < 0 or c >= self._board.ncols:
                 raise ValueError('Illegal column %d' % c)
 
-            return self._cols[c][-1] == 0
+            return self._cols[(c + 1) * self._board.nrows  - 1] == 0
 
         
         def get_actions(self):
@@ -71,13 +71,13 @@ class Connect4(Game):
             if not self.is_legal(c):
                 raise ValueError('Illegal move: %d' % c)
 
-            succ = Connect4.State(self._board, [row[:] for row in self._cols], 1 - self._turn)
+            succ = Connect4.State(self._board, self._cols[:], 1 - self._turn)
 
             # Place the disk in the given column
             for i in range(succ._board.nrows):
-                if succ._cols[c][i] == 0:
+                if succ._cols[c * self._board.nrows + i] == 0:
                     # player 0's discs are encoded as 1, player 1's discs are encoded as 2 (empty is encoded as 0)
-                    succ._cols[c][i] = self._turn + 1
+                    succ._cols[c * self._board.nrows + i] = self._turn + 1
                     break
 
             # succ._compute_hash()
@@ -86,7 +86,7 @@ class Connect4(Game):
 
         def _board_filled(self):
             for i in range(self._board.ncols):
-                if self._cols[i][-1] == 0:
+                if self._cols[(i + 1) * self._board.nrows - 1] == 0:
                     return False
             return True
 
@@ -105,11 +105,11 @@ class Connect4(Game):
                     if i <= self._board.ncols - 4:
                         # Check upper diagonal if valid
                         if j <= self._board.nrows - 4:
-                            color = self._cols[i][j]
+                            color = self._cols[i * self._board.nrows + j]
                             if color != 0:
                                 line = True
                                 for a in range(3):
-                                    if self._cols[i + a + 1][j + a + 1] != color:
+                                    if self._cols[(i + a + 1) * self._board.nrows + j + a + 1] != color:
                                         line = False
                                         break
                                 if line:
@@ -117,22 +117,22 @@ class Connect4(Game):
                         
                         # Check lower diagonal if valid
                         if j >= 3:
-                            color = self._cols[i][j]
+                            color = self._cols[i * self._board.nrows + j]
                             if color != 0:
                                 line = True
                                 for a in range(3):
-                                    if self._cols[i + a + 1][j - a - 1] != color:
+                                    if self._cols[(i + a + 1) * self._board.nrows + j - a - 1] != color:
                                         line = False
                                         break
                                 if line:
                                     return True, color
 
                         # Check horizontal
-                        color = self._cols[i][j]
+                        color = self._cols[i * self._board.nrows + j]
                         if color != 0:
                             line = True
                             for a in range(3):
-                                if self._cols[i + a + 1][j] != color:
+                                if self._cols[(i + a + 1) * self._board.nrows + j] != color:
                                     line = False
                                     break
                             if line:
@@ -140,11 +140,11 @@ class Connect4(Game):
                 
                     # Check vertical if valid
                     if j <= self._board.nrows - 4:
-                        color = self._cols[i][j]
+                        color = self._cols[i * self._board.nrows + j]
                         if color != 0:
                             line = True
                             for a in range(3):
-                                if self._cols[i][j + a + 1] != color:
+                                if self._cols[i * self._board.nrows + j + a + 1] != color:
                                     line = False
                                     break
                             if line:
@@ -186,13 +186,13 @@ class Connect4(Game):
                     if i <= self._board.ncols - 4:
                         # Check upper diagonal if valid
                         if j <= self._board.nrows - 4:
-                            color = self._cols[i][j]
+                            color = self._cols[i * self._board.nrows + j]
                             if color != 0:
                                 seq_len = 1
                                 for a in range(3):
-                                    if self._cols[i + a + 1][j + a + 1] == color:
+                                    if self._cols[(i + a + 1) * self._board.nrows + j + a + 1] == color:
                                         seq_len += 1
-                                    elif self._cols[i + a + 1][j + a + 1] > 0:
+                                    elif self._cols[(i + a + 1) * self._board.nrows + j + a + 1] > 0:
                                         seq_len = 0
                                         break
                                 if seq_len > 1:
@@ -201,13 +201,13 @@ class Connect4(Game):
                         
                         # Check lower diagonal if valid
                         if j >= 3:
-                            color = self._cols[i][j]
+                            color = self._cols[i * self._board.nrows + j]
                             if color != 0:
                                 seq_len = 1
                                 for a in range(3):
-                                    if self._cols[i + a + 1][j - a - 1] == color:
+                                    if self._cols[(i + a + 1) * self._board.nrows + j - a - 1] == color:
                                         seq_len += 1
-                                    elif self._cols[i + a + 1][j - a - 1] > 0:
+                                    elif self._cols[(i + a + 1) * self._board.nrows + j - a - 1] > 0:
                                         seq_len = 0
                                         break
                                 if seq_len > 1:
@@ -215,13 +215,13 @@ class Connect4(Game):
                                     value += pow(seq_len, 2) if color == 1 else -pow(seq_len, 2)
 
                         # Check horizontal
-                        color = self._cols[i][j]
+                        color = self._cols[i * self._board.nrows + j]
                         if color != 0:
                             seq_len = 1
                             for a in range(3):
-                                if self._cols[i + a + 1][j] == color:
+                                if self._cols[(i + a + 1) * self._board.nrows + j] == color:
                                     seq_len += 1
-                                elif self._cols[i + a + 1][j] > 0:
+                                elif self._cols[(i + a + 1) * self._board.nrows + j] > 0:
                                     seq_len = 0
                                     break
                             if seq_len > 1:
@@ -230,13 +230,13 @@ class Connect4(Game):
                 
                     # Check vertical if valid
                     if j <= self._board.nrows - 4:
-                        color = self._cols[i][j]
+                        color = self._cols[i * self._board.nrows + j]
                         if color != 0:
                             seq_len = 1
                             for a in range(3):
-                                if self._cols[i][j + a + 1] == color:
+                                if self._cols[i * self._board.nrows + j + a + 1] == color:
                                     seq_len += 1
-                                elif self._cols[i][j + a + 1] > 0:
+                                elif self._cols[i * self._board.nrows + j + a + 1] > 0:
                                     seq_len = 0
                                     break
                             if seq_len > 1:
@@ -248,7 +248,7 @@ class Connect4(Game):
             board_str = ""
             for i in range(self._board.nrows):
                 for j in range(self._board.ncols):
-                    board_str += str(self._cols[j][self._board.nrows - 1 - i]) + " "
+                    board_str += str(self._cols[(j + 1) * self._board.nrows - i - 1]) + " "
                 board_str += "\n"
             return board_str
 
