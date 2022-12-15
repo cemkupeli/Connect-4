@@ -1,3 +1,5 @@
+# SOURCE: Adapted from starter code for CPSC 474 Fall 2022 Project 4
+
 from datetime import datetime
 import random
 import math
