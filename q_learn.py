@@ -2,9 +2,11 @@ from datetime import datetime
 import random
 import math
 
-# model is NFLstrategy class
+# model is class
 # limit is time limit
-def q_learn(model, limit):
+
+
+def q_learning(model, limit):
     learning_rate = .2
     max_iteration = 1000
     discount_rate = .95
@@ -13,10 +15,10 @@ def q_learn(model, limit):
     min_explor = .01
     decay_rate = .00005
     gamma = 0.99
-    learning_table = [0.1]* 9
-    learning_rate_decy = 0.99999
-    actions = model.offensive_playbook_size()
-    q_table = [[0]*actions for i in range(9)]
+    learning_table = [0.1]* 1000000
+    learning_rate_decy = 0.999
+    actions = model.get_actions()
+    q_table = [[0]*actions for i in range(100000)]
     #print(q_table)
     count = 0
     start_time = datetime.now()
@@ -32,25 +34,19 @@ def q_learn(model, limit):
             if num > exploration_rate:
                 cstate = classify(state)
                 action = max(range(actions), key = lambda a: q_table[cstate][a])
-                #action = max(q_table[cstate][:]) # fix later
-                #for i in range(actions):
-                 #   if action == (q_table[cstate][i]):
-                  #      action = i
-                   #     break
 
             else:
-                actions = model.offensive_playbook_size()
+                actions = model.get_actions()
                 action = random.randint(0, actions -1)
             
             new_state, _ = model.result(state, action)
             reward = 0
-            if (model.game_over(new_state)):
+            if (model.is_terminal(new_state)):
                 if (model.win(new_state)):
                     reward = 8
                 else:
                     reward = -8
-            
-            #yards to score/ time left
+
             cnew_state = classify(new_state)
             cstate = classify(state)
 
@@ -59,7 +55,7 @@ def q_learn(model, limit):
             - q_table[cstate][action])
             learning_table[cstate] *= learning_rate_decy
             state = new_state
-            term = model.game_over(new_state)
+            term = model.is_terminal(new_state)
             if (term == True):
                 break
 
@@ -77,22 +73,14 @@ def q_learn(model, limit):
 
     return returns
 
-def classify(new_state):
-    #yards to score/ time left
-    num1 = new_state[0] / (new_state[3] or 1)
-    # distance / downs left
-    num2 = new_state[2] / new_state[1]
-    if num1 > 3.8:
-        num1 = 0
-    elif num1 > 1.8:
-        num1 = 1
-    else:
-        num1 = 2
-    
-    if num2 > 4:
-        num2 = 0
-    elif num2 > 2:
-        num2 = 1
-    else:
-        num2 = 2
-    return num1*3 + num2   
+def classify(state):
+    num = 0
+    power = 0
+    for i in range(len(state)):
+        num += state[i] * 7**power
+        if state[i] == 0 and i < 6:
+            num += 3 * 7**power
+        elif state[i] == 0:
+            if state[i-7] != 0:
+                num += 3 * 7**power
+    return num
