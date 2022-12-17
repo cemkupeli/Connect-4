@@ -2,14 +2,14 @@ from connect4 import Connect4
 from random_policy import random_policy
 from minimax import minimax_policy
 from alpha_beta import alpha_beta_policy
-from q_learn import q_learning
+from q_learn_c import q_learn
 import time
 
 if __name__ == '__main__':
 
     num_games = 10000
     p0_wins = 0
-    p0_policy = q_learning(Connect4(), 10)
+    p0_policy = q_learn(Connect4(), 600)
     p1_wins = 0
     p1_policy = random_policy()
 

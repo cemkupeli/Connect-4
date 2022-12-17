@@ -1,6 +1,7 @@
 # SOURCE: Adapted from starter code for CPSC 474 Fall 2022 Project 4
 
 import math
+import random
 
 def minimax_policy(depth, randomness):
     def fxn(pos):
