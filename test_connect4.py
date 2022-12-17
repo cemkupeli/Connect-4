@@ -9,7 +9,7 @@ if __name__ == '__main__':
 
     num_games = 10000
     p0_wins = 0
-    p0_policy = q_learn(Connect4(), 600)
+    p0_policy = q_learn(Connect4(), 10)
     p1_wins = 0
     p1_policy = random_policy()
 

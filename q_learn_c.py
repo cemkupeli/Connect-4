@@ -8,7 +8,7 @@ def q_learn(board, time_limit):
     epsilon_max = 1
     epsilon_min = 0.01
     epsilon_decay = 0.00005
-    learning_rate = 0.01
+    learning_rate = 0.0001
     learning_rate_decay = 0.99999
     gamma = 0.95
 
@@ -44,15 +44,20 @@ def q_learn(board, time_limit):
     n_tuples = [get_n_tuple(TUPLE_LEN) for _ in range(NUM_N_TUPLES)]
     # print(n_tuples)
 
-    # Create a q-table that stores q(s, a) for every state s of every n-tuple paired with each possible action
+    # Create two q-tables that store q(s, a) for every state s of every n-tuple paired with each possible action, one per player
     MAX_INDEX_ENCODING = 2 # each board location has a value of 0 for empty, 1 for player 0, 2 for player 1
     TUPLE_STATE_SPACE = (MAX_INDEX_ENCODING + 1) ** (TUPLE_LEN - 1) * TUPLE_LEN
-    q_table = [[[0 for _ in range(TUPLE_STATE_SPACE)]
+    q_table0 = [[[0 for _ in range(TUPLE_STATE_SPACE)]
+                 for _ in range(NUM_N_TUPLES)]
+                 for _ in range(board.ncols)]
+    q_table1 = [[[0 for _ in range(TUPLE_STATE_SPACE)]
                  for _ in range(NUM_N_TUPLES)]
                  for _ in range(board.ncols)]
 
-    # List of learning rates for different states based on feature
-    lr_table = [[learning_rate for _ in range(TUPLE_STATE_SPACE)]
+    # List of learning rates for every state of every n-tuple, one per player
+    lr_table0 = [[learning_rate for _ in range(TUPLE_STATE_SPACE)]
+                 for _ in range(NUM_N_TUPLES)]
+    lr_table1 = [[learning_rate for _ in range(TUPLE_STATE_SPACE)]
                  for _ in range(NUM_N_TUPLES)]
 
     ## Function approximator mapping the state space to the n-tuple network
@@ -70,19 +75,25 @@ def q_learn(board, time_limit):
 
     # Returns the q(s, a) value for the given position-action pair by summing the q-values across all n-tuples
     # Mapping calculated in advance by call to get_mapping and passed by reference to avoid recalculating for each action
-    def get_q_value(mapping, action):
+    def get_q_value(mapping, action, player):
         value = 0
         for i in range(NUM_N_TUPLES):
-            value += q_table[action][i][mapping[i]]
+            value += q_table0[action][i][mapping[i]] if player == 0 else q_table1[action][i][mapping[i]]
         return value
 
     # Update q(s, a) values and corresponding learning rates
-    def update_table(mapping, action, reward, future_reward):
+    def update_table(mapping, action, reward, future_reward, player):
         for i in range(NUM_N_TUPLES):
-            q_table[action][i][mapping[i]] = q_table[action][i][mapping[i]] + lr_table[i][mapping[i]] * (
-                reward + gamma * future_reward - q_table[action][i][mapping[i]])
-            # Learning rate decay
-            lr_table[i][mapping[i]] *= learning_rate_decay
+            if player == 0:
+                q_table0[action][i][mapping[i]] = q_table0[action][i][mapping[i]] + lr_table0[i][mapping[i]] * (
+                    reward + gamma * future_reward - q_table0[action][i][mapping[i]])
+                # Learning rate decay
+                lr_table0[i][mapping[i]] *= learning_rate_decay
+            else:
+                q_table1[action][i][mapping[i]] = q_table1[action][i][mapping[i]] + lr_table1[i][mapping[i]] * (
+                    reward + gamma * future_reward - q_table1[action][i][mapping[i]])
+                # Learning rate decay
+                lr_table1[i][mapping[i]] *= learning_rate_decay
 
 
     # Run q-learning until the time limit is reached
@@ -98,14 +109,14 @@ def q_learn(board, time_limit):
                 action = random.choice(pos.get_actions())
             else:
                 mapping = get_mapping(pos)
-                action = max(pos.get_actions(), key = lambda a: get_q_value(mapping, a))
+                action = max(pos.get_actions(), key = lambda a: get_q_value(mapping, a, pos.actor()))
 
             # Get next state based on action and reward for action
             next_pos = pos.successor(action)
             reward = 0
             end_reached = False
             if next_pos.is_terminal():
-                reward = 100 if next_pos.payoff() == 1 else -100
+                reward = next_pos.payoff() if pos.actor() == 0 else -next_pos.payoff()
                 end_reached = True
                 
                 
@@ -113,12 +124,12 @@ def q_learn(board, time_limit):
             if not mapping:
                 mapping = get_mapping(pos)
             if end_reached:
-                update_table(mapping, action, reward, 0) # no future reward if next state is a terminal position
+                update_table(mapping, action, reward, 0, pos.actor()) # no future reward if next state is a terminal position
             else:    
                 next_mapping = get_mapping(next_pos)
-                next_action = max(next_pos.get_actions(), key = lambda a: get_q_value(next_mapping, a))
-                max_future_reward = get_q_value(next_mapping, next_action)
-                update_table(mapping, action, reward, max_future_reward)
+                next_action = max(next_pos.get_actions(), key = lambda a: get_q_value(next_mapping, a, next_pos.actor()))
+                max_future_reward = -get_q_value(next_mapping, next_action, next_pos.actor())
+                update_table(mapping, action, reward, max_future_reward, pos.actor())
 
             # Update current position
             pos = next_pos
@@ -129,10 +140,12 @@ def q_learn(board, time_limit):
         # Update number of iterations
         num_iterations += 1
     
+    print(q_table0)
+    print(q_table1)
     print("Number of games:", num_iterations)
     def fxn(position):
         mapping = get_mapping(position)
-        action = max(position.get_actions(), key = lambda a: get_q_value(mapping, a))
+        action = max(position.get_actions(), key = lambda a: get_q_value(mapping, a, position.actor()))
         # print(action) # FOR TESTING
         return action
     return fxn
