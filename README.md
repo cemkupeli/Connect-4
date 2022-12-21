@@ -1,2 +1,8 @@
-# Connect-4
- Minimax, Alpha-Beta and Q-learning performance comparison for Connect 4
+# q-learning and minimax with alpha-beta pruning for Connect 4
+Group members: Cem Kupeli, Jeffrey Zhou
+
+Description: We have implemented three algorithms and compared their performances in solving Connect 4. First, we have minimax with a heuristic that assigns value to potential four-line tokens. The heuristic function is a part of the Connect4 class that we adapted from the Game class we used in several assignments. Second, we have alpha-beta pruning, which should perform similarly to minimax at the same depth (though not identically, so long as we induce some randomness), but it should run faster at the same depth due to the additional pruning. Finally, we have q-learning with an n-tuple network function approximator, a method that is outlined in the following [article](https://link.springer.com/chapter/10.1007/978-3-642-32937-1_19)
+
+Results: As expected, alpha-beta pruning performed similar to minimax but with faster runtimes, and the difference seemed to increase with depth (likely due to the additional impact pruning has with longer branches). However, our q-learning agent was not able to beat minimax, so we focused on improving its performances as much as we could in playing against a random agent. Following the article's advice, we implemented two q-tables, one for each player, in order to more accurately assign value to board positions depending on whose turn it is. This, along with other minor adjustments, helped increase the win rate to around 0.89.
+
+How to run: Running "make Connect4" will create an executable that can be run by the command "./Connect4 {python3 | pypy3} agent [depth | training-time] games". Agent can be "alpha-beta" for a performance and runtime comparison between alpha-beta and minimax or "q-learning" for a performance evaluation of the q-learning algorithm. [depth | training time] is either the depth for alpha-beta/minimax or the training time for the q-learning agent, and games is the number of games that will be simulated.
