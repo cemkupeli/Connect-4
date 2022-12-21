@@ -8,7 +8,7 @@ import sys
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 4:
+    if len(sys.argv) != 5:
         sys.exit("Usage: ./Connect4 {python3 | pypy3} agent {depth | training-time} games")
 
     parameter = None
