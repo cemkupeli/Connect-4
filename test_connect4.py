@@ -12,10 +12,10 @@ if __name__ == '__main__':
         sys.exit("Usage: ./Connect4 {python3 | pypy3} agent {depth | training-time} games")
 
     parameter = None
-    agent = sys.argv[1]
+    agent = sys.argv[2]
     if (agent == "alpha-beta" or agent == "q-learning"):
         try:
-            parameter = int(sys.argv[2]) if agent == "alpha-beta" else float(sys.argv[2])
+            parameter = int(sys.argv[3]) if agent == "alpha-beta" else float(sys.argv[3])
         except:
             sys.exit("Invalid parameter")
     else:
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     
     num_games = 0
     try:
-        num_games = int(sys.argv[3])
+        num_games = int(sys.argv[4])
     except:
         sys.exit("Number of games must be an integer")
 
